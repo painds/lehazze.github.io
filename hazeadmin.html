@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Le Blendz | Premium Admin</title>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    
+    <style>
+        :root {
+            --primary: #007AFF; --bg: #F2F2F7; --card: #FFFFFF;
+            --text-main: #1C1C1E; --text-muted: #8E8E93;
+            --red: #FF3B30; --green: #34C759; --border: #E5E5EA;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        body { background-color: var(--bg); color: var(--text-main); padding-bottom: 90px; }
+
+        header { padding: 50px 20px 20px 20px; background: rgba(242, 242, 247, 0.85); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        header h1 { font-size: 32px; font-weight: 800; letter-spacing: -1px; display: flex; align-items: center; gap: 10px;}
+
+        .section-title { padding: 0 20px 8px 20px; font-size: 13px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 1px; margin-top: 30px; }
+        
+        /* Şık Tablo Tasarımı */
+        .table-card { background: var(--card); margin: 0 16px; border-radius: 16px; overflow-x: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { padding: 16px 20px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: #fafafa; }
+        td { font-size: 15px; font-weight: 500; vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: rgba(0,122,255,0.02); }
+
+        /* iOS Liste Tasarımı (Diğer Ayarlar İçin) */
+        .ios-group { background: var(--card); margin: 0 16px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+        .ios-item { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+        .ios-item:last-child { border-bottom: none; }
+        .item-info { display: flex; flex-direction: column; flex: 1; }
+        .item-title { font-size: 16px; font-weight: 600; }
+        .item-sub { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+
+        /* Switch Butonu */
+        .switch { position: relative; display: inline-block; width: 51px; height: 31px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #E9E9EA; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 27px; width: 27px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 3px 8px rgba(0,0,0,0.15); }
+        input:checked + .slider { background-color: var(--green); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Input & Butonlar */
+        .input-wrap { padding: 0 16px; }
+        .ios-input { width: 100%; border: 1.5px solid var(--border); padding: 14px 16px; background: #fff; border-radius: 12px; font-size: 16px; margin-bottom: 12px; outline: none; transition: border 0.3s; }
+        .ios-input:focus { border-color: var(--primary); }
+        
+        .ios-btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 10px rgba(0, 122, 255, 0.2); }
+        .ios-btn-red { background: var(--red); box-shadow: 0 4px 10px rgba(255, 59, 48, 0.2); }
+        
+        /* Tablo İçi Butonlar */
+        .action-flex { display: flex; gap: 8px; }
+        .btn-sm { padding: 8px 12px; border: none; border-radius: 8px; color: white; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .bg-green { background: var(--green); }
+        .bg-red { background: var(--red); }
+
+        /* Alt Menü (Tab Bar) */
+        .tab-bar { position: fixed; bottom: 0; width: 100%; height: 85px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding-top: 12px; z-index: 1000; padding-bottom: 20px; }
+        .tab-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); text-decoration: none; font-size: 11px; font-weight: 500; gap: 6px; transition: color 0.2s; }
+        .tab-item.active { color: var(--primary); }
+        .tab-icon { font-size: 22px; }
+
+        .page { display: none; padding-top: 10px; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .badge { padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+        .b-act { background: rgba(0,122,255,0.1); color: var(--primary); }
+        .b-can { background: rgba(255,59,48,0.1); color: var(--red); }
+        .b-don { background: rgba(52,197,89,0.1); color: var(--green); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1 id="page-title"><i class="fa-solid fa-calendar-check" style="color: var(--primary);"></i> Randevular</h1>
+    </header>
+
+    <div id="appointments" class="page active">
+        <div class="section-title">Güncel Randevu Listesi</div>
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tarih / Saat</th>
+                        <th>Müşteri (Tel)</th>
+                        <th>Hizmet & Tutar</th>
+                        <th>Durum</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody id="appt-list">
+                    <tr><td colspan="5" style="text-align: center; padding: 30px; color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Yükleniyor...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="services" class="page">
+        <div class="section-title">Aktif Hizmetler</div>
+        <div class="ios-group" id="service-list"></div>
+
+        <div class="section-title">Yeni Hizmet Ekle</div>
+        <div class="input-wrap">
+            <input type="text" id="srv-name" class="ios-input" placeholder="Hizmet Adı (Örn: Saç Yıkama)">
+            <input type="number" id="srv-price" class="ios-input" placeholder="Fiyat (TL)">
+            <button class="ios-btn" onclick="addService()"><i class="fa-solid fa-plus"></i> Sisteme Ekle</button>
+        </div>
+    </div>
+
+    <div id="schedule" class="page">
+        <div class="section-title">Haftalık Çalışma Durumu</div>
+        <div class="ios-group" id="days-list"></div>
+    </div>
+
+    <div id="security" class="page">
+        <div class="section-title">Engellenen Numaralar</div>
+        <div class="ios-group" id="banned-list"></div>
+
+        <div class="section-title">Yeni Numara Engelle</div>
+        <div class="input-wrap">
+            <input type="tel" id="ban-phone" class="ios-input" placeholder="Örn: 5551234567">
+            <button class="ios-btn ios-btn-red" onclick="banPhone()"><i class="fa-solid fa-user-slash"></i> Numarayı Yasakla</button>
+        </div>
+    </div>
+
+    <nav class="tab-bar">
+        <a href="#" class="tab-item active" onclick="showPage('appointments', 'Randevular', 'fa-calendar-check', this)">
+            <i class="fa-solid fa-calendar-check tab-icon"></i><span>Randevular</span>
+        </a>
+        <a href="#" class="tab-item" onclick="showPage('services', 'Hizmetler', 'fa-scissors', this)">
+            <i class="fa-solid fa-scissors tab-icon"></i><span>Hizmetler</span>
+        </a>
+        <a href="#" class="tab-item" onclick="showPage('schedule', 'Saatler', 'fa-clock', this)">
+            <i class="fa-regular fa-clock tab-icon"></i><span>Saatler</span>
+        </a>
+        <a href="#" class="tab-item" onclick="showPage('security', 'Güvenlik', 'fa-shield-halved', this)">
+            <i class="fa-solid fa-shield-halved tab-icon"></i><span>Güvenlik</span>
+        </a>
+    </nav>
+
+    <script>
+        // ═══ FIREBASE BAĞLANTISI ═══
+        firebase.initializeApp({
+            apiKey: "AIzaSyBlirRiiNPpdqmTAmq6DsSq8mCUlgBHgVc",
+            authDomain: "lilemir-new.firebaseapp.com",
+            databaseURL: "https://lilemir-new-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "lilemir-new",
+            storageBucket: "lilemir-new.firebasestorage.app",
+            messagingSenderId: "339863121380",
+            appId: "1:339863121380:web:123195552e821b085e6bf1"
+        });
+        const DB = firebase.database();
+
+        // Sayfa Geçişi
+        function showPage(pageId, title, iconClass, element) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            
+            // Başlık ve İkonu Güncelle
+            document.getElementById('page-title').innerHTML = `<i class="fa-solid ${iconClass}" style="color: var(--primary);"></i> ${title}`;
+            element.classList.add('active');
+            window.scrollTo(0,0);
+        }
+
+        // 1. RANDEVULAR (TABLO FORMATI)
+        DB.ref('hz_appts').on('value', snap => {
+            const data = snap.val();
+            const tbody = document.getElementById('appt-list');
+            
+            if(!data) { 
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox fa-2x" style="margin-bottom:10px; display:block;"></i>Kayıtlı randevu bulunmuyor</td></tr>'; 
+                return; 
+            }
+            
+            // Tarihe göre sırala (Yeniden eskiye)
+            const appts = Object.values(data).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            tbody.innerHTML = appts.map(a => `
+                <tr>
+                    <td>
+                        <div style="font-weight: 700; color: var(--text-main);"><i class="fa-regular fa-calendar" style="margin-right:5px; color:var(--text-muted)"></i>${a.date}</div>
+                        <div style="color: var(--primary); font-weight: 800; font-size: 14px; margin-top: 4px;"><i class="fa-regular fa-clock" style="margin-right:5px;"></i>${a.time}</div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 700; letter-spacing: 0.5px;">${a.phone}</div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 600;">${a.service}</div>
+                        <div style="color: var(--green); font-weight: 700; font-size: 14px; margin-top: 4px;">₺${a.price} ${a.tip > 0 ? `<span style="color:var(--text-muted); font-size:12px;">(+₺${a.tip} Bahşiş)</span>` : ''}</div>
+                    </td>
+                    <td>
+                        <span class="badge ${a.status === 'active' ? 'b-act' : a.status === 'cancelled' ? 'b-can' : 'b-don'}">
+                            ${a.status === 'active' ? '<i class="fa-solid fa-circle"></i> Aktif' : a.status === 'cancelled' ? '<i class="fa-solid fa-xmark"></i> İptal' : '<i class="fa-solid fa-check-double"></i> Bitti'}
+                        </span>
+                    </td>
+                    <td>
+                        ${a.status === 'active' ? `
+                        <div class="action-flex">
+                            <button class="btn-sm bg-green" onclick="updateApptStatus('${a.id}', 'tamamlandi')"><i class="fa-solid fa-check"></i> Onayla</button>
+                            <button class="btn-sm bg-red" onclick="updateApptStatus('${a.id}', 'iptal')"><i class="fa-solid fa-xmark"></i> İptal</button>
+                        </div>` : `<span style="color: var(--text-muted); font-size: 13px; font-weight: 500;"><i class="fa-solid fa-lock"></i> İşlem Kapalı</span>`}
+                    </td>
+                </tr>
+            `).join('');
+        });
+
+        function updateApptStatus(id, newStatus) {
+            if(confirm('Bu işlemi onaylıyor musunuz?')) {
+                DB.ref('hz_appts/' + id).update({ status: newStatus });
+            }
+        }
+
+        // 2. HİZMETLERİ ÇEK
+        DB.ref('hz_services').on('value', snap => {
+            const data = snap.val();
+            const container = document.getElementById('service-list');
+            if(!data) { container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">Hizmet bulunamadı.</div>'; return; }
+            
+            container.innerHTML = Object.values(data).map(s => `
+                <div class="ios-item">
+                    <div class="item-info">
+                        <span class="item-title">${s.name}</span>
+                        <span class="item-sub" style="color: var(--primary); font-weight: 600;">₺${s.price}</span>
+                    </div>
+                    <button class="btn-sm bg-red" onclick="deleteService('${s.id}')"><i class="fa-solid fa-trash"></i> Sil</button>
+                </div>
+            `).join('');
+        });
+
+        function addService() {
+            const name = document.getElementById('srv-name').value;
+            const price = document.getElementById('srv-price').value;
+            if(!name || !price) return alert("Lütfen ad ve fiyat girin.");
+            
+            const id = 'svc_' + Date.now();
+            DB.ref('hz_services/' + id).set({ id: id, name: name, price: Number(price) });
+            
+            document.getElementById('srv-name').value = '';
+            document.getElementById('srv-price').value = '';
+        }
+
+        function deleteService(id) {
+            if(confirm("Bu hizmeti silmek istediğinize emin misiniz?")) DB.ref('hz_services/' + id).remove();
+        }
+
+        // 3. GÜNLERİ YÖNET
+        const days = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
+        DB.ref('hz_settings/days').on('value', snap => {
+            let data = snap.val() || {};
+            document.getElementById('days-list').innerHTML = days.map(d => {
+                const isOpen = data[d] !== undefined ? data[d] : (d !== "Pazar");
+                return `
+                <div class="ios-item">
+                    <span class="item-title" style="font-weight: ${isOpen ? '700' : '500'}; color: ${isOpen ? 'var(--text-main)' : 'var(--text-muted)'};">${d}</span>
+                    <label class="switch">
+                        <input type="checkbox" ${isOpen ? 'checked' : ''} onchange="toggleDay('${d}', this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>`;
+            }).join('');
+        });
+
+        function toggleDay(day, isOpen) { DB.ref('hz_settings/days/' + day).set(isOpen); }
+
+        // 4. BAN SİSTEMİ
+        DB.ref('hz_bans/phones').on('value', snap => {
+            const data = snap.val();
+            const container = document.getElementById('banned-list');
+            if(!data) { container.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);"><i class="fa-solid fa-shield-check fa-2x" style="margin-bottom:10px; display:block; color: var(--green);"></i>Banlı numara yok</div>'; return; }
+            
+            container.innerHTML = Object.keys(data).map(phone => `
+                <div class="ios-item">
+                    <span class="item-title" style="letter-spacing: 1px;"><i class="fa-solid fa-phone-slash" style="color: var(--red); margin-right: 8px;"></i>${phone}</span>
+                    <button class="btn-sm bg-green" onclick="unbanPhone('${phone}')"><i class="fa-solid fa-unlock"></i> Kaldır</button>
+                </div>
+            `).join('');
+        });
+
+        function banPhone() {
+            let phone = document.getElementById('ban-phone').value.trim();
+            if(!phone) return;
+            phone = phone.replace(/[^0-9]/g, ''); 
+            DB.ref('hz_bans/phones/' + phone).set(true);
+            document.getElementById('ban-phone').value = '';
+        }
+
+        function unbanPhone(phone) { DB.ref('hz_bans/phones/' + phone).remove(); }
+    </script>
+</body>
+</html>
