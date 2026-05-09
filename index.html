@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Le Blendz | Premium Admin</title>
+    <title>Le Blendz | Takvim Admin</title>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
@@ -20,123 +20,143 @@
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
         body { background-color: var(--bg); color: var(--text-main); padding-bottom: 90px; }
 
-        header { padding: 50px 20px 20px 20px; background: rgba(242, 242, 247, 0.85); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(0,0,0,0.05); }
-        header h1 { font-size: 32px; font-weight: 800; letter-spacing: -1px; display: flex; align-items: center; gap: 10px;}
+        header { padding: 40px 15px 15px 15px; background: rgba(242, 242, 247, 0.85); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        header h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px;}
 
-        .section-title { padding: 0 20px 8px 20px; font-size: 13px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 1px; margin-top: 30px; }
+        .section-title { padding: 0 15px 6px 15px; font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 1px; margin-top: 15px; }
         
-        /* Şık Tablo Tasarımı */
-        .table-card { background: var(--card); margin: 0 16px; border-radius: 16px; overflow-x: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th, td { padding: 16px 20px; text-align: left; border-bottom: 1px solid var(--border); }
-        th { font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: #fafafa; }
-        td { font-size: 15px; font-weight: 500; vertical-align: middle; }
-        tr:last-child td { border-bottom: none; }
-        tr:hover { background: rgba(0,122,255,0.02); }
+        /* 🔥 MOBİL UYUMLU KOMPAKT TAKVİM 🔥 */
+        .calendar-wrapper { 
+            background: var(--card); margin: 0 10px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+            overflow-x: auto; overflow-y: auto; max-height: 68vh; border: 1px solid var(--border);
+        }
+        .cal-table { width: 100%; border-collapse: collapse; min-width: 460px; }
+        .cal-table th, .cal-table td { border: 1px solid var(--border); vertical-align: top; padding: 1px; height: 50px; position: relative; }
+        
+        .cal-table th { background: #F9F9FB; position: sticky; top: 0; z-index: 10; padding: 6px 2px; text-align: center; }
+        .day-name { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
+        .day-num { font-size: 15px; font-weight: 800; color: var(--text-main); margin-top: 2px; }
+        .today-header .day-num { color: white; background: var(--primary); display: inline-block; width: 24px; height: 24px; line-height: 24px; border-radius: 50%; }
 
-        /* iOS Liste Tasarımı (Diğer Ayarlar İçin) */
-        .ios-group { background: var(--card); margin: 0 16px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
-        .ios-item { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+        .time-label { position: sticky; left: 0; background: #F9F9FB; z-index: 9; width: 45px; text-align: center; font-size: 10px; font-weight: 700; color: var(--text-muted); vertical-align: middle !important; border-right: 2px solid var(--border) !important;}
+        .cal-table th:first-child { z-index: 11; left: 0; background: #F9F9FB; border-right: 2px solid var(--border) !important; }
+
+        .appt-block { margin: 1px; padding: 4px; border-radius: 4px; font-size: 10px; cursor: pointer; border-left: 3px solid transparent; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: 0.2s; line-height: 1.1; }
+        .appt-block:active { transform: scale(0.95); }
+        .appt-block strong { display: block; font-size: 10px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .appt-block span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.8; font-size: 9px; }
+        
+        .bg-active { background: #E5F1FF; border-left-color: var(--primary); color: #004499; }
+        .bg-done { background: #E8F8F0; border-left-color: var(--green); color: #14592D; }
+        .bg-cancel { background: #FFEBEB; border-left-color: var(--red); color: #990000; text-decoration: line-through; opacity: 0.6; }
+
+        /* 🔥 MODAL (POPUP) 🔥 */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+        .modal-overlay.show { display: flex; animation: fadeIn 0.2s; }
+        .modal-card { background: var(--card); width: 85%; max-width: 320px; border-radius: 16px; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+        .modal-title { font-size: 16px; font-weight: 800; text-align: center; margin-bottom: 15px; color: var(--text-main); }
+        
+        .m-row { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed var(--border); padding-bottom: 6px; font-size: 14px; }
+        .m-lbl { color: var(--text-muted); font-weight: 600; font-size: 12px; }
+        .m-val { font-weight: 800; color: var(--text-main); }
+        
+        .modal-actions { display: flex; gap: 8px; margin-top: 20px; }
+        .modal-btn { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: 700; font-size: 14px; color: white; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; }
+        .modal-btn.close { background: var(--bg); color: var(--text-main); margin-top: 10px; width: 100%; }
+
+        /* iOS Liste ve Inputlar */
+        .ios-group { background: var(--card); margin: 0 10px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+        .ios-item { padding: 14px 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
         .ios-item:last-child { border-bottom: none; }
-        .item-info { display: flex; flex-direction: column; flex: 1; }
-        .item-title { font-size: 16px; font-weight: 600; }
-        .item-sub { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
-
-        /* Switch Butonu */
-        .switch { position: relative; display: inline-block; width: 51px; height: 31px; }
+        .item-title { font-size: 15px; font-weight: 600; }
+        .item-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+        .input-wrap { padding: 0 10px; display: flex; gap: 8px; margin-bottom: 10px; }
+        .ios-input { width: 100%; border: 1.5px solid var(--border); padding: 12px 15px; border-radius: 10px; font-size: 15px; outline: none; background: #fff;}
+        .ios-btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 10px; width: 100%; font-size: 15px; font-weight: 600; cursor: pointer; }
+        
+        .switch { position: relative; display: inline-block; width: 44px; height: 26px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #E9E9EA; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 27px; width: 27px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 3px 8px rgba(0,0,0,0.15); }
+        .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 3px 8px rgba(0,0,0,0.15); }
         input:checked + .slider { background-color: var(--green); }
-        input:checked + .slider:before { transform: translateX(20px); }
+        input:checked + .slider:before { transform: translateX(18px); }
 
-        /* Input & Butonlar */
-        .input-wrap { padding: 0 16px; }
-        .ios-input { width: 100%; border: 1.5px solid var(--border); padding: 14px 16px; background: #fff; border-radius: 12px; font-size: 16px; margin-bottom: 12px; outline: none; transition: border 0.3s; }
-        .ios-input:focus { border-color: var(--primary); }
-        
-        .ios-btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 10px rgba(0, 122, 255, 0.2); }
-        .ios-btn-red { background: var(--red); box-shadow: 0 4px 10px rgba(255, 59, 48, 0.2); }
-        
-        /* Tablo İçi Butonlar */
-        .action-flex { display: flex; gap: 8px; }
-        .btn-sm { padding: 8px 12px; border: none; border-radius: 8px; color: white; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-        .bg-green { background: var(--green); }
-        .bg-red { background: var(--red); }
-
-        /* Alt Menü (Tab Bar) */
-        .tab-bar { position: fixed; bottom: 0; width: 100%; height: 85px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding-top: 12px; z-index: 1000; padding-bottom: 20px; }
-        .tab-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); text-decoration: none; font-size: 11px; font-weight: 500; gap: 6px; transition: color 0.2s; }
+        .tab-bar { position: fixed; bottom: 0; width: 100%; height: 75px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding-top: 10px; z-index: 1000; padding-bottom: 15px; }
+        .tab-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); text-decoration: none; font-size: 10px; font-weight: 600; gap: 4px; }
         .tab-item.active { color: var(--primary); }
-        .tab-icon { font-size: 22px; }
+        .tab-icon { font-size: 20px; }
 
-        .page { display: none; padding-top: 10px; animation: fadeIn 0.3s ease; }
+        .page { display: none; padding-top: 5px; animation: fadeIn 0.3s ease; padding-bottom: 30px; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .badge { padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
-        .b-act { background: rgba(0,122,255,0.1); color: var(--primary); }
-        .b-can { background: rgba(255,59,48,0.1); color: var(--red); }
-        .b-don { background: rgba(52,197,89,0.1); color: var(--green); }
     </style>
 </head>
 <body>
 
     <header>
-        <h1 id="page-title"><i class="fa-solid fa-calendar-check" style="color: var(--primary);"></i> Randevular</h1>
+        <h1 id="page-title"><i class="fa-solid fa-calendar-days" style="color: var(--primary);"></i> Takvim</h1>
     </header>
 
     <div id="appointments" class="page active">
-        <div class="section-title">Güncel Randevu Listesi</div>
-        <div class="table-card">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Tarih / Saat</th>
-                        <th>Müşteri (Tel)</th>
-                        <th>Hizmet & Tutar</th>
-                        <th>Durum</th>
-                        <th>İşlemler</th>
-                    </tr>
-                </thead>
-                <tbody id="appt-list">
-                    <tr><td colspan="5" style="text-align: center; padding: 30px; color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Yükleniyor...</td></tr>
-                </tbody>
-            </table>
+        <div class="section-title">Haftalık Görünüm (Sağa Kaydırın)</div>
+        <div class="calendar-wrapper" id="calendar-container">
+            <div style="text-align: center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>
         </div>
     </div>
 
     <div id="services" class="page">
         <div class="section-title">Aktif Hizmetler</div>
         <div class="ios-group" id="service-list"></div>
-
         <div class="section-title">Yeni Hizmet Ekle</div>
-        <div class="input-wrap">
-            <input type="text" id="srv-name" class="ios-input" placeholder="Hizmet Adı (Örn: Saç Yıkama)">
+        <div class="input-wrap" style="flex-direction: column;">
+            <input type="text" id="srv-name" class="ios-input" placeholder="Hizmet Adı">
             <input type="number" id="srv-price" class="ios-input" placeholder="Fiyat (TL)">
-            <button class="ios-btn" onclick="addService()"><i class="fa-solid fa-plus"></i> Sisteme Ekle</button>
+            <button class="ios-btn" onclick="addService()">Ekle</button>
         </div>
     </div>
 
     <div id="schedule" class="page">
         <div class="section-title">Haftalık Çalışma Durumu</div>
         <div class="ios-group" id="days-list"></div>
+
+        <div class="section-title" style="margin-top: 25px;">Özel Saat Kapatma</div>
+        <div style="padding: 0 10px; margin-bottom: 10px;">
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px; margin-left: 5px;">Seçtiğiniz tarihteki belirli bir saati randevuya kapatın.</p>
+            <div class="input-wrap">
+                <input type="date" id="block-date" class="ios-input" style="flex: 1;">
+                <select id="block-time" class="ios-input" style="flex: 1;">
+                    <option value="">Saat</option>
+                    <option value="12:00">12:00</option>
+                    <option value="13:00">13:00</option>
+                    <option value="14:00">14:00</option>
+                    <option value="15:00">15:00</option>
+                    <option value="16:00">16:00</option>
+                    <option value="17:00">17:00</option>
+                    <option value="18:00">18:00</option>
+                    <option value="19:00">19:00</option>
+                    <option value="20:00">20:00</option>
+                </select>
+            </div>
+            <button class="ios-btn" style="background: var(--red); width: calc(100% - 20px); margin: 0 auto; display: block;" onclick="blockTime()"><i class="fa-solid fa-ban"></i> Saati Kapat</button>
+        </div>
+
+        <div class="section-title">Kapatılan Özel Saatler</div>
+        <div class="ios-group" id="blocked-times-list"></div>
     </div>
 
     <div id="security" class="page">
         <div class="section-title">Engellenen Numaralar</div>
         <div class="ios-group" id="banned-list"></div>
-
         <div class="section-title">Yeni Numara Engelle</div>
-        <div class="input-wrap">
+        <div class="input-wrap" style="flex-direction: column;">
             <input type="tel" id="ban-phone" class="ios-input" placeholder="Örn: 5551234567">
-            <button class="ios-btn ios-btn-red" onclick="banPhone()"><i class="fa-solid fa-user-slash"></i> Numarayı Yasakla</button>
+            <button class="ios-btn" style="background:var(--red)" onclick="banPhone()">Yasakla</button>
         </div>
     </div>
 
     <nav class="tab-bar">
-        <a href="#" class="tab-item active" onclick="showPage('appointments', 'Randevular', 'fa-calendar-check', this)">
-            <i class="fa-solid fa-calendar-check tab-icon"></i><span>Randevular</span>
+        <a href="#" class="tab-item active" onclick="showPage('appointments', 'Takvim', 'fa-calendar-days', this)">
+            <i class="fa-solid fa-calendar-days tab-icon"></i><span>Takvim</span>
         </a>
         <a href="#" class="tab-item" onclick="showPage('services', 'Hizmetler', 'fa-scissors', this)">
             <i class="fa-solid fa-scissors tab-icon"></i><span>Hizmetler</span>
@@ -148,6 +168,21 @@
             <i class="fa-solid fa-shield-halved tab-icon"></i><span>Güvenlik</span>
         </a>
     </nav>
+
+    <div class="modal-overlay" id="appt-modal">
+        <div class="modal-card">
+            <div class="modal-title">Randevu Detayı</div>
+            
+            <div class="m-row"><span class="m-lbl">Tarih / Saat</span><span class="m-val" id="m-dt"></span></div>
+            <div class="m-row"><span class="m-lbl">Müşteri</span><span class="m-val" id="m-ph"></span></div>
+            <div class="m-row"><span class="m-lbl">Hizmet</span><span class="m-val" id="m-svc"></span></div>
+            <div class="m-row"><span class="m-lbl">Bahşiş</span><span class="m-val" id="m-tip"></span></div>
+            <div class="m-row" style="border:none;"><span class="m-lbl" style="color:var(--text-main)">Toplam</span><span class="m-val" id="m-tot" style="font-size:16px; color:var(--primary);"></span></div>
+            
+            <div id="m-action-btns"></div>
+            <button class="modal-btn close" onclick="closeModal()">Pencereyi Kapat</button>
+        </div>
+    </div>
 
     <script>
         // ═══ FIREBASE BAĞLANTISI ═══
@@ -162,79 +197,134 @@
         });
         const DB = firebase.database();
 
-        // Sayfa Geçişi
         function showPage(pageId, title, iconClass, element) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
-            
-            // Başlık ve İkonu Güncelle
             document.getElementById('page-title').innerHTML = `<i class="fa-solid ${iconClass}" style="color: var(--primary);"></i> ${title}`;
             element.classList.add('active');
             window.scrollTo(0,0);
         }
 
-        // 1. RANDEVULAR (TABLO FORMATI)
-        DB.ref('hz_appts').on('value', snap => {
-            const data = snap.val();
-            const tbody = document.getElementById('appt-list');
+        // 🔥 TAKVİM OLUŞTURMA İŞLEMLERİ 🔥
+        let globalAppts = {}; 
+        let dateWindow = []; 
+        
+        function generateCalendarStructure() {
+            dateWindow = [];
+            const today = new Date();
+            today.setHours(0,0,0,0);
             
-            if(!data) { 
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox fa-2x" style="margin-bottom:10px; display:block;"></i>Kayıtlı randevu bulunmuyor</td></tr>'; 
-                return; 
+            for(let i = -1; i < 6; i++) {
+                const d = new Date(today);
+                d.setDate(today.getDate() + i);
+                const ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+                dateWindow.push({
+                    dateStr: ds,
+                    dayNum: d.getDate(),
+                    dayName: ['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'][d.getDay()],
+                    isToday: i === 0
+                });
             }
+
+            let html = '<table class="cal-table"><thead><tr><th class="time-label"><i class="fa-regular fa-clock"></i></th>';
             
-            // Tarihe göre sırala (Yeniden eskiye)
-            const appts = Object.values(data).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-            
-            tbody.innerHTML = appts.map(a => `
-                <tr>
-                    <td>
-                        <div style="font-weight: 700; color: var(--text-main);"><i class="fa-regular fa-calendar" style="margin-right:5px; color:var(--text-muted)"></i>${a.date}</div>
-                        <div style="color: var(--primary); font-weight: 800; font-size: 14px; margin-top: 4px;"><i class="fa-regular fa-clock" style="margin-right:5px;"></i>${a.time}</div>
-                    </td>
-                    <td>
-                        <div style="font-weight: 700; letter-spacing: 0.5px;">${a.phone}</div>
-                    </td>
-                    <td>
-                        <div style="font-weight: 600;">${a.service}</div>
-                        <div style="color: var(--green); font-weight: 700; font-size: 14px; margin-top: 4px;">₺${a.price} ${a.tip > 0 ? `<span style="color:var(--text-muted); font-size:12px;">(+₺${a.tip} Bahşiş)</span>` : ''}</div>
-                    </td>
-                    <td>
-                        <span class="badge ${a.status === 'active' ? 'b-act' : a.status === 'cancelled' ? 'b-can' : 'b-don'}">
-                            ${a.status === 'active' ? '<i class="fa-solid fa-circle"></i> Aktif' : a.status === 'cancelled' ? '<i class="fa-solid fa-xmark"></i> İptal' : '<i class="fa-solid fa-check-double"></i> Bitti'}
-                        </span>
-                    </td>
-                    <td>
-                        ${a.status === 'active' ? `
-                        <div class="action-flex">
-                            <button class="btn-sm bg-green" onclick="updateApptStatus('${a.id}', 'tamamlandi')"><i class="fa-solid fa-check"></i> Onayla</button>
-                            <button class="btn-sm bg-red" onclick="updateApptStatus('${a.id}', 'iptal')"><i class="fa-solid fa-xmark"></i> İptal</button>
-                        </div>` : `<span style="color: var(--text-muted); font-size: 13px; font-weight: 500;"><i class="fa-solid fa-lock"></i> İşlem Kapalı</span>`}
-                    </td>
-                </tr>
-            `).join('');
+            dateWindow.forEach(d => {
+                const cls = d.isToday ? 'today-header' : '';
+                html += `<th class="${cls}"><div class="day-name">${d.dayName}</div><div class="day-num">${d.dayNum}</div></th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            for(let h = 12; h <= 20; h++) {
+                const timeStr = String(h).padStart(2,'0') + ':00';
+                html += `<tr><td class="time-label">${timeStr}</td>`;
+                
+                dateWindow.forEach(d => {
+                    html += `<td id="cell-${d.dateStr}-${timeStr}"></td>`;
+                });
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+            document.getElementById('calendar-container').innerHTML = html;
+        }
+
+        DB.ref('hz_appts').on('value', snap => {
+            generateCalendarStructure(); 
+            const data = snap.val();
+            if(!data) return;
+            globalAppts = data;
+
+            Object.values(data).forEach(a => {
+                const cellId = `cell-${a.date}-${a.time}`;
+                const cell = document.getElementById(cellId);
+                
+                if(cell) {
+                    let bgClass = 'bg-active';
+                    if(a.status === 'tamamlandi') bgClass = 'bg-done';
+                    if(a.status === 'iptal' || a.status === 'cancelled') bgClass = 'bg-cancel';
+
+                    cell.innerHTML += `
+                        <div class="appt-block ${bgClass}" onclick="openModal('${a.id}')">
+                            <strong>${a.phone}</strong>
+                            <span>${a.service}</span>
+                        </div>
+                    `;
+                }
+            });
         });
 
-        function updateApptStatus(id, newStatus) {
-            if(confirm('Bu işlemi onaylıyor musunuz?')) {
-                DB.ref('hz_appts/' + id).update({ status: newStatus });
+        // 🔥 MODAL KONTROLLERİ 🔥
+        function openModal(id) {
+            const a = globalAppts[id];
+            if(!a) return;
+
+            document.getElementById('m-dt').textContent = `${a.date} | ${a.time}`;
+            document.getElementById('m-ph').textContent = a.phone;
+            document.getElementById('m-svc').textContent = a.service;
+            document.getElementById('m-tip').textContent = `₺${a.tip || 0}`;
+            document.getElementById('m-tot').textContent = `₺${a.price + (a.tip || 0)}`;
+
+            const actionContainer = document.getElementById('m-action-btns');
+            if(a.status === 'active') {
+                actionContainer.innerHTML = `
+                    <div class="modal-actions">
+                        <button class="modal-btn" style="background:var(--green);" onclick="updateStatus('${a.id}', 'tamamlandi')"><i class="fa-solid fa-check"></i> Onayla</button>
+                        <button class="modal-btn" style="background:var(--red);" onclick="updateStatus('${a.id}', 'iptal')"><i class="fa-solid fa-xmark"></i> İptal</button>
+                    </div>
+                `;
+            } else {
+                const statText = a.status === 'tamamlandi' ? '<span style="color:var(--green)"><i class="fa-solid fa-check-double"></i> Tamamlandı</span>' : '<span style="color:var(--red)"><i class="fa-solid fa-ban"></i> İptal Edildi</span>';
+                actionContainer.innerHTML = `
+                    <div style="text-align:center; padding: 12px; background:var(--bg); border-radius:10px; margin-top:15px; font-weight:700; font-size:13px;">
+                        Bu işlem: ${statText}
+                    </div>
+                `;
+            }
+
+            document.getElementById('appt-modal').classList.add('show');
+        }
+
+        function closeModal() { document.getElementById('appt-modal').classList.remove('show'); }
+
+        function updateStatus(id, stat) {
+            if(confirm('Onaylıyor musunuz?')) {
+                DB.ref('hz_appts/' + id).update({ status: stat });
+                closeModal();
             }
         }
 
-        // 2. HİZMETLERİ ÇEK
+        // 2. HİZMETLER
         DB.ref('hz_services').on('value', snap => {
             const data = snap.val();
             const container = document.getElementById('service-list');
-            if(!data) { container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">Hizmet bulunamadı.</div>'; return; }
-            
+            if(!data) { container.innerHTML = ''; return; }
             container.innerHTML = Object.values(data).map(s => `
                 <div class="ios-item">
-                    <div class="item-info">
-                        <span class="item-title">${s.name}</span>
-                        <span class="item-sub" style="color: var(--primary); font-weight: 600;">₺${s.price}</span>
+                    <div>
+                        <div class="item-title">${s.name}</div>
+                        <div class="item-sub" style="color:var(--primary); font-weight:bold;">₺${s.price}</div>
                     </div>
-                    <button class="btn-sm bg-red" onclick="deleteService('${s.id}')"><i class="fa-solid fa-trash"></i> Sil</button>
+                    <button class="ios-btn" style="background:var(--red); width:auto; padding:8px 12px;" onclick="if(confirm('Silinsin mi?')) DB.ref('hz_services/${s.id}').remove()"><i class="fa-solid fa-trash"></i></button>
                 </div>
             `).join('');
         });
@@ -242,20 +332,14 @@
         function addService() {
             const name = document.getElementById('srv-name').value;
             const price = document.getElementById('srv-price').value;
-            if(!name || !price) return alert("Lütfen ad ve fiyat girin.");
-            
-            const id = 'svc_' + Date.now();
-            DB.ref('hz_services/' + id).set({ id: id, name: name, price: Number(price) });
-            
-            document.getElementById('srv-name').value = '';
-            document.getElementById('srv-price').value = '';
+            if(name && price) {
+                DB.ref('hz_services/svc_' + Date.now()).set({ id: 'svc_'+Date.now(), name, price: Number(price) });
+                document.getElementById('srv-name').value = '';
+                document.getElementById('srv-price').value = '';
+            }
         }
 
-        function deleteService(id) {
-            if(confirm("Bu hizmeti silmek istediğinize emin misiniz?")) DB.ref('hz_services/' + id).remove();
-        }
-
-        // 3. GÜNLERİ YÖNET
+        // 3. GÜNLER
         const days = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
         DB.ref('hz_settings/days').on('value', snap => {
             let data = snap.val() || {};
@@ -263,40 +347,77 @@
                 const isOpen = data[d] !== undefined ? data[d] : (d !== "Pazar");
                 return `
                 <div class="ios-item">
-                    <span class="item-title" style="font-weight: ${isOpen ? '700' : '500'}; color: ${isOpen ? 'var(--text-main)' : 'var(--text-muted)'};">${d}</span>
-                    <label class="switch">
-                        <input type="checkbox" ${isOpen ? 'checked' : ''} onchange="toggleDay('${d}', this.checked)">
-                        <span class="slider"></span>
-                    </label>
+                    <span class="item-title">${d}</span>
+                    <label class="switch"><input type="checkbox" ${isOpen?'checked':''} onchange="DB.ref('hz_settings/days/${d}').set(this.checked)"><span class="slider"></span></label>
                 </div>`;
             }).join('');
         });
 
-        function toggleDay(day, isOpen) { DB.ref('hz_settings/days/' + day).set(isOpen); }
+        // 🔥 YENİ: ÖZEL SAAT KAPATMA (BLOCKED TIMES) 🔥
+        DB.ref('hz_blocked').on('value', snap => {
+            const data = snap.val();
+            const container = document.getElementById('blocked-times-list');
+            if(!data) { 
+                container.innerHTML = '<div style="padding:15px;text-align:center;color:var(--text-muted);font-size:12px;">Kapatılan saat yok</div>'; 
+                return; 
+            }
+            
+            let html = '';
+            Object.keys(data).sort().reverse().forEach(date => {
+                const times = data[date];
+                if(times) {
+                    Object.keys(times).forEach(timeKey => {
+                        const timeStr = times[timeKey];
+                        // Tarih formatını güzelleştir
+                        const dParts = date.split('-');
+                        const dFmt = `${dParts[2]}/${dParts[1]}/${dParts[0]}`;
+                        
+                        html += `
+                        <div class="ios-item">
+                            <span class="item-title" style="font-size:14px;"><i class="fa-regular fa-calendar-xmark" style="margin-right:6px; color:var(--red);"></i>${dFmt} - ${timeStr}</span>
+                            <button class="ios-btn" style="background:var(--green); width:auto; padding:6px 12px; font-size:13px;" onclick="unblockTime('${date}', '${timeKey}')"><i class="fa-solid fa-unlock"></i> Aç</button>
+                        </div>`;
+                    });
+                }
+            });
+            container.innerHTML = html || '<div style="padding:15px;text-align:center;color:var(--text-muted);font-size:12px;">Kapatılan saat yok</div>';
+        });
 
-        // 4. BAN SİSTEMİ
+        function blockTime() {
+            const date = document.getElementById('block-date').value;
+            const time = document.getElementById('block-time').value;
+            
+            if(!date || !time) return alert("Lütfen kapatılacak tarihi ve saati seçin!");
+            
+            // Firebase'de güvenli key için saati (örn: 14:00 -> 1400) yapıyoruz
+            const timeKey = time.replace(':', ''); 
+            DB.ref(`hz_blocked/${date}/${timeKey}`).set(time);
+            
+            alert(`${date} tarihindeki ${time} saati randevulara kapatıldı!`);
+            document.getElementById('block-time').value = '';
+        }
+
+        function unblockTime(date, timeKey) {
+            DB.ref(`hz_blocked/${date}/${timeKey}`).remove();
+        }
+
+        // 4. BAN
         DB.ref('hz_bans/phones').on('value', snap => {
             const data = snap.val();
             const container = document.getElementById('banned-list');
-            if(!data) { container.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);"><i class="fa-solid fa-shield-check fa-2x" style="margin-bottom:10px; display:block; color: var(--green);"></i>Banlı numara yok</div>'; return; }
-            
+            if(!data) { container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:14px;">Banlı numara yok</div>'; return; }
             container.innerHTML = Object.keys(data).map(phone => `
                 <div class="ios-item">
-                    <span class="item-title" style="letter-spacing: 1px;"><i class="fa-solid fa-phone-slash" style="color: var(--red); margin-right: 8px;"></i>${phone}</span>
-                    <button class="btn-sm bg-green" onclick="unbanPhone('${phone}')"><i class="fa-solid fa-unlock"></i> Kaldır</button>
+                    <span class="item-title" style="color:var(--red); font-size:14px;"><i class="fa-solid fa-phone-slash" style="margin-right:8px;"></i>${phone}</span>
+                    <button class="ios-btn" style="background:var(--green); width:auto; padding:6px 10px; font-size:13px;" onclick="DB.ref('hz_bans/phones/${phone}').remove()"><i class="fa-solid fa-unlock"></i> Kaldır</button>
                 </div>
             `).join('');
         });
 
         function banPhone() {
-            let phone = document.getElementById('ban-phone').value.trim();
-            if(!phone) return;
-            phone = phone.replace(/[^0-9]/g, ''); 
-            DB.ref('hz_bans/phones/' + phone).set(true);
-            document.getElementById('ban-phone').value = '';
+            let phone = document.getElementById('ban-phone').value.replace(/[^0-9]/g, '');
+            if(phone) { DB.ref('hz_bans/phones/' + phone).set(true); document.getElementById('ban-phone').value = ''; }
         }
-
-        function unbanPhone(phone) { DB.ref('hz_bans/phones/' + phone).remove(); }
     </script>
 </body>
 </html>
