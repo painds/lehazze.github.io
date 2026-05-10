@@ -48,7 +48,6 @@
         
         .bg-active { background: #E5F1FF; border-left-color: var(--primary); color: #004499; }
         .bg-done { background: #E8F8F0; border-left-color: var(--green); color: #14592D; }
-        .bg-cancel { background: #FFEBEB; border-left-color: var(--red); color: #990000; text-decoration: line-through; opacity: 0.6; }
 
         /* 🔥 MODAL (POPUP) 🔥 */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
@@ -255,13 +254,15 @@
             globalAppts = data;
 
             Object.values(data).forEach(a => {
+                // 🔥 İPTAL EDİLENLERİ TAKVİMDE HİÇ ÇİZME, ATLA 🔥
+                if(a.status === 'iptal' || a.status === 'cancelled') return;
+
                 const cellId = `cell-${a.date}-${a.time}`;
                 const cell = document.getElementById(cellId);
                 
                 if(cell) {
                     let bgClass = 'bg-active';
                     if(a.status === 'tamamlandi') bgClass = 'bg-done';
-                    if(a.status === 'iptal' || a.status === 'cancelled') bgClass = 'bg-cancel';
 
                     cell.innerHTML += `
                         <div class="appt-block ${bgClass}" onclick="openModal('${a.id}')">
@@ -289,14 +290,13 @@
                 actionContainer.innerHTML = `
                     <div class="modal-actions">
                         <button class="modal-btn" style="background:var(--green);" onclick="updateStatus('${a.id}', 'tamamlandi')"><i class="fa-solid fa-check"></i> Onayla</button>
-                        <button class="modal-btn" style="background:var(--red);" onclick="updateStatus('${a.id}', 'iptal')"><i class="fa-solid fa-xmark"></i> İptal</button>
+                        <button class="modal-btn" style="background:var(--red);" onclick="updateStatus('${a.id}', 'iptal')"><i class="fa-solid fa-trash-can"></i> İptal & Sil</button>
                     </div>
                 `;
             } else {
-                const statText = a.status === 'tamamlandi' ? '<span style="color:var(--green)"><i class="fa-solid fa-check-double"></i> Tamamlandı</span>' : '<span style="color:var(--red)"><i class="fa-solid fa-ban"></i> İptal Edildi</span>';
                 actionContainer.innerHTML = `
-                    <div style="text-align:center; padding: 12px; background:var(--bg); border-radius:10px; margin-top:15px; font-weight:700; font-size:13px;">
-                        Bu işlem: ${statText}
+                    <div style="text-align:center; padding: 12px; background:var(--bg); border-radius:10px; margin-top:15px; font-weight:700; font-size:13px; color:var(--green);">
+                        <i class="fa-solid fa-check-double"></i> Tamamlandı
                     </div>
                 `;
             }
@@ -308,7 +308,12 @@
 
         function updateStatus(id, stat) {
             if(confirm('Onaylıyor musunuz?')) {
-                DB.ref('hz_appts/' + id).update({ status: stat });
+                if(stat === 'iptal') {
+                    // 🔥 İPTAL BUTONUNA BASILINCA VERİTABANINDAN TAMAMEN SİLER 🔥
+                    DB.ref('hz_appts/' + id).remove();
+                } else {
+                    DB.ref('hz_appts/' + id).update({ status: stat });
+                }
                 closeModal();
             }
         }
@@ -353,7 +358,7 @@
             }).join('');
         });
 
-        // 🔥 YENİ: ÖZEL SAAT KAPATMA (BLOCKED TIMES) 🔥
+        // 🔥 ÖZEL SAAT KAPATMA (BLOCKED TIMES) 🔥
         DB.ref('hz_blocked').on('value', snap => {
             const data = snap.val();
             const container = document.getElementById('blocked-times-list');
@@ -368,7 +373,6 @@
                 if(times) {
                     Object.keys(times).forEach(timeKey => {
                         const timeStr = times[timeKey];
-                        // Tarih formatını güzelleştir
                         const dParts = date.split('-');
                         const dFmt = `${dParts[2]}/${dParts[1]}/${dParts[0]}`;
                         
@@ -389,7 +393,6 @@
             
             if(!date || !time) return alert("Lütfen kapatılacak tarihi ve saati seçin!");
             
-            // Firebase'de güvenli key için saati (örn: 14:00 -> 1400) yapıyoruz
             const timeKey = time.replace(':', ''); 
             DB.ref(`hz_blocked/${date}/${timeKey}`).set(time);
             
