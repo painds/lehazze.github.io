@@ -25,7 +25,7 @@
 
         .section-title { padding: 0 15px 6px 15px; font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 1px; margin-top: 15px; }
         
-        /* 🔥 MOBİL UYUMLU KOMPAKT TAKVİM 🔥 */
+        /* 🔥 TAKVİM TASARIMI 🔥 */
         .calendar-wrapper { 
             background: var(--card); margin: 0 10px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
             overflow-x: auto; overflow-y: auto; max-height: 68vh; border: 1px solid var(--border);
@@ -42,14 +42,15 @@
         .cal-table th:first-child { z-index: 11; left: 0; background: #F9F9FB; border-right: 2px solid var(--border) !important; }
 
         .appt-block { margin: 1px; padding: 4px; border-radius: 4px; font-size: 10px; cursor: pointer; border-left: 3px solid transparent; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: 0.2s; line-height: 1.1; }
-        .appt-block:active { transform: scale(0.95); }
         .appt-block strong { display: block; font-size: 10px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
         .appt-block span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.8; font-size: 9px; }
         
         .bg-active { background: #E5F1FF; border-left-color: var(--primary); color: #004499; }
         .bg-done { background: #E8F8F0; border-left-color: var(--green); color: #14592D; }
+        /* 🔥 YENİ: KAPATILAN SAATLERİN TAKVİMDEKİ RENGİ 🔥 */
+        .bg-blocked { background: #F2F2F7; border-left-color: #8E8E93; color: #3A3A3C; opacity: 0.8; }
 
-        /* 🔥 MODAL (POPUP) 🔥 */
+        /* MODAL (POPUP) */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
         .modal-overlay.show { display: flex; animation: fadeIn 0.2s; }
         .modal-card { background: var(--card); width: 85%; max-width: 320px; border-radius: 16px; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
@@ -209,10 +210,11 @@
             window.scrollTo(0,0);
         }
 
-        // 🔥 TAKVİM VE MESAİ SAATLERİ YÖNETİMİ 🔥
+        // 🔥 TAKVİM VE VERİ YÖNETİMİ 🔥
         let globalAppts = {}; 
+        let globalBlocked = {}; // 🔥 Kapatılan saatleri burada tutacağız
         let dateWindow = []; 
-        let globalHours = { start: 12, end: 20 }; // Varsayılan mesai saatleri
+        let globalHours = { start: 12, end: 20 };
         
         function generateCalendarStructure() {
             dateWindow = [];
@@ -232,18 +234,15 @@
             }
 
             let html = '<table class="cal-table"><thead><tr><th class="time-label"><i class="fa-regular fa-clock"></i></th>';
-            
             dateWindow.forEach(d => {
                 const cls = d.isToday ? 'today-header' : '';
                 html += `<th class="${cls}"><div class="day-name">${d.dayName}</div><div class="day-num">${d.dayNum}</div></th>`;
             });
             html += '</tr></thead><tbody>';
 
-            // Takvim mesai saatlerine (globalHours) göre çizilir
             for(let h = globalHours.start; h <= globalHours.end; h++) {
                 const timeStr = String(h).padStart(2,'0') + ':00';
                 html += `<tr><td class="time-label">${timeStr}</td>`;
-                
                 dateWindow.forEach(d => {
                     html += `<td id="cell-${d.dateStr}-${timeStr}"></td>`;
                 });
@@ -256,82 +255,91 @@
         function renderCalendarAndAppts() {
             generateCalendarStructure(); 
             
-            if(!globalAppts) return;
-            Object.values(globalAppts).forEach(a => {
-                // İptal edilenleri gösterme
-                if(a.status === 'iptal' || a.status === 'cancelled') return;
+            // 1. ÖNCE KAPATILAN SAATLERİ ÇİZ 🔥
+            if(globalBlocked) {
+                Object.keys(globalBlocked).forEach(date => {
+                    const times = globalBlocked[date];
+                    Object.values(times).forEach(timeStr => {
+                        const cellId = `cell-${date}-${timeStr}`;
+                        const cell = document.getElementById(cellId);
+                        if(cell) {
+                            cell.innerHTML = `
+                                <div class="appt-block bg-blocked">
+                                    <strong>KAPALI</strong>
+                                    <span>Saat Devre Dışı</span>
+                                </div>`;
+                        }
+                    });
+                });
+            }
 
-                const cellId = `cell-${a.date}-${a.time}`;
-                const cell = document.getElementById(cellId);
-                
-                if(cell) {
-                    let bgClass = 'bg-active';
-                    if(a.status === 'tamamlandi') bgClass = 'bg-done';
-
-                    cell.innerHTML += `
-                        <div class="appt-block ${bgClass}" onclick="openModal('${a.id}')">
-                            <strong>${a.phone}</strong>
-                            <span>${a.service}</span>
-                        </div>
-                    `;
-                }
-            });
+            // 2. SONRA RANDEVULARI ÇİZ (Randevu varsa kapalı yazısının üstüne biner)
+            if(globalAppts) {
+                Object.values(globalAppts).forEach(a => {
+                    if(a.status === 'iptal' || a.status === 'cancelled') return;
+                    const cellId = `cell-${a.date}-${a.time}`;
+                    const cell = document.getElementById(cellId);
+                    if(cell) {
+                        let bgClass = 'bg-active';
+                        if(a.status === 'tamamlandi') bgClass = 'bg-done';
+                        cell.innerHTML = `
+                            <div class="appt-block ${bgClass}" onclick="openModal('${a.id}')">
+                                <strong>${a.phone}</strong>
+                                <span>${a.service}</span>
+                            </div>`;
+                    }
+                });
+            }
         }
 
-        // Mesai Saatlerini Çek ve Ekrana Yansıt
+        // Veritabanı Dinleyicileri
         DB.ref('hz_hours').on('value', snap => {
             const data = snap.val() || { start: "12:00", end: "20:00" };
             document.getElementById('work-start').value = data.start;
             document.getElementById('work-end').value = data.end;
-            
             globalHours.start = parseInt(data.start.split(':')[0]);
             globalHours.end = parseInt(data.end.split(':')[0]);
-            
-            renderCalendarAndAppts(); // Saatler değiştiğinde takvimi yeniden çiz
+            renderCalendarAndAppts();
         });
 
-        function updateWorkHours() {
-            const start = document.getElementById('work-start').value;
-            const end = document.getElementById('work-end').value;
-            if(!start || !end) return alert("Lütfen hem açılış hem kapanış saatini seçin.");
-            
-            DB.ref('hz_hours').set({ start: start, end: end });
-            alert("Mesai saatleri başarıyla güncellendi! Sitedeki randevu saatleri anında değişti.");
-        }
+        DB.ref('hz_blocked').on('value', snap => {
+            globalBlocked = snap.val() || {};
+            renderCalendarAndAppts();
+            updateBlockedListUI(); // Alt listeyi de güncelle
+        });
 
-        // Randevuları Çek
         DB.ref('hz_appts').on('value', snap => {
             globalAppts = snap.val() || {};
             renderCalendarAndAppts();
         });
 
-        // 🔥 MODAL KONTROLLERİ 🔥
+        function updateWorkHours() {
+            const start = document.getElementById('work-start').value;
+            const end = document.getElementById('work-end').value;
+            if(!start || !end) return alert("Lütfen saat seçin.");
+            DB.ref('hz_hours').set({ start, end });
+            alert("Kaydedildi!");
+        }
+
+        // MODAL İŞLEMLERİ
         function openModal(id) {
             const a = globalAppts[id];
             if(!a) return;
-
             document.getElementById('m-dt').textContent = `${a.date} | ${a.time}`;
             document.getElementById('m-ph').textContent = a.phone;
             document.getElementById('m-svc').textContent = a.service;
             document.getElementById('m-tip').textContent = `₺${a.tip || 0}`;
             document.getElementById('m-tot').textContent = `₺${a.price + (a.tip || 0)}`;
-
             const actionContainer = document.getElementById('m-action-btns');
             if(a.status === 'active') {
                 actionContainer.innerHTML = `
                     <div class="modal-actions">
                         <button class="modal-btn" style="background:var(--green);" onclick="updateStatus('${a.id}', 'tamamlandi')"><i class="fa-solid fa-check"></i> Onayla</button>
-                        <button class="modal-btn" style="background:var(--red);" onclick="updateStatus('${a.id}', 'iptal')"><i class="fa-solid fa-trash-can"></i> İptal & Sil</button>
-                    </div>
-                `;
+                        <button class="modal-btn" style="background:var(--red);" onclick="updateStatus('${a.id}', 'iptal')"><i class="fa-solid fa-trash-can"></i> İptal</button>
+                    </div>`;
             } else {
-                actionContainer.innerHTML = `
-                    <div style="text-align:center; padding: 12px; background:var(--bg); border-radius:10px; margin-top:15px; font-weight:700; font-size:13px; color:var(--green);">
-                        <i class="fa-solid fa-check-double"></i> Tamamlandı
-                    </div>
-                `;
+                actionContainer.innerHTML = `<div style="text-align:center; padding: 12px; background:var(--bg); border-radius:10px; margin-top:15px; font-weight:700; color:var(--green);">Tamamlandı</div>`;
             }
-
             document.getElementById('appt-modal').classList.add('show');
         }
 
@@ -339,29 +347,22 @@
 
         function updateStatus(id, stat) {
             if(confirm('Onaylıyor musunuz?')) {
-                if(stat === 'iptal') {
-                    DB.ref('hz_appts/' + id).remove();
-                } else {
-                    DB.ref('hz_appts/' + id).update({ status: stat });
-                }
+                if(stat === 'iptal') DB.ref('hz_appts/' + id).remove();
+                else DB.ref('hz_appts/' + id).update({ status: stat });
                 closeModal();
             }
         }
 
-        // 2. HİZMETLER
+        // HİZMETLER
         DB.ref('hz_services').on('value', snap => {
             const data = snap.val();
             const container = document.getElementById('service-list');
             if(!data) { container.innerHTML = ''; return; }
             container.innerHTML = Object.values(data).map(s => `
                 <div class="ios-item">
-                    <div>
-                        <div class="item-title">${s.name}</div>
-                        <div class="item-sub" style="color:var(--primary); font-weight:bold;">₺${s.price}</div>
-                    </div>
+                    <div><div class="item-title">${s.name}</div><div class="item-sub" style="color:var(--primary); font-weight:bold;">₺${s.price}</div></div>
                     <button class="ios-btn" style="background:var(--red); width:auto; padding:8px 12px;" onclick="if(confirm('Silinsin mi?')) DB.ref('hz_services/${s.id}').remove()"><i class="fa-solid fa-trash"></i></button>
-                </div>
-            `).join('');
+                </div>`).join('');
         });
 
         function addService() {
@@ -369,12 +370,11 @@
             const price = document.getElementById('srv-price').value;
             if(name && price) {
                 DB.ref('hz_services/svc_' + Date.now()).set({ id: 'svc_'+Date.now(), name, price: Number(price) });
-                document.getElementById('srv-name').value = '';
-                document.getElementById('srv-price').value = '';
+                document.getElementById('srv-name').value = ''; document.getElementById('srv-price').value = '';
             }
         }
 
-        // 3. GÜNLER
+        // GÜNLER
         const days = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
         DB.ref('hz_settings/days').on('value', snap => {
             let data = snap.val() || {};
@@ -388,67 +388,51 @@
             }).join('');
         });
 
-        // 🔥 ÖZEL SAAT KAPATMA (BLOCKED TIMES) 🔥
-        DB.ref('hz_blocked').on('value', snap => {
-            const data = snap.val();
+        // 🔥 ÖZEL SAAT KAPATMA LİSTESİ 🔥
+        function updateBlockedListUI() {
             const container = document.getElementById('blocked-times-list');
-            if(!data) { 
+            if(Object.keys(globalBlocked).length === 0) { 
                 container.innerHTML = '<div style="padding:15px;text-align:center;color:var(--text-muted);font-size:12px;">Kapatılan saat yok</div>'; 
                 return; 
             }
-            
             let html = '';
-            Object.keys(data).sort().reverse().forEach(date => {
-                const times = data[date];
-                if(times) {
-                    Object.keys(times).forEach(timeKey => {
-                        const timeStr = times[timeKey];
-                        const dParts = date.split('-');
-                        const dFmt = `${dParts[2]}/${dParts[1]}/${dParts[0]}`;
-                        
-                        html += `
-                        <div class="ios-item">
-                            <span class="item-title" style="font-size:14px;"><i class="fa-regular fa-calendar-xmark" style="margin-right:6px; color:var(--red);"></i>${dFmt} - ${timeStr}</span>
-                            <button class="ios-btn" style="background:var(--green); width:auto; padding:6px 12px; font-size:13px;" onclick="unblockTime('${date}', '${timeKey}')"><i class="fa-solid fa-unlock"></i> Aç</button>
-                        </div>`;
-                    });
-                }
+            Object.keys(globalBlocked).sort().reverse().forEach(date => {
+                const times = globalBlocked[date];
+                Object.keys(times).forEach(timeKey => {
+                    const timeStr = times[timeKey];
+                    const dParts = date.split('-');
+                    html += `
+                    <div class="ios-item">
+                        <span class="item-title" style="font-size:14px;"><i class="fa-regular fa-calendar-xmark" style="margin-right:6px; color:var(--red);"></i>${dParts[2]}/${dParts[1]} - ${timeStr}</span>
+                        <button class="ios-btn" style="background:var(--green); width:auto; padding:6px 12px; font-size:13px;" onclick="unblockTime('${date}', '${timeKey}')"><i class="fa-solid fa-unlock"></i> Aç</button>
+                    </div>`;
+                });
             });
-            container.innerHTML = html || '<div style="padding:15px;text-align:center;color:var(--text-muted);font-size:12px;">Kapatılan saat yok</div>';
-        });
+            container.innerHTML = html;
+        }
 
         function blockTime() {
             const date = document.getElementById('block-date').value;
-            let time = document.getElementById('block-time').value; // Artık dropdown değil, serbest giriş
-            
-            if(!date || !time) return alert("Lütfen kapatılacak tarihi ve saati seçin!");
-            
-            // Eğer dakika varsa onu sıfırla (Sadece tam saat kapanır, örn: 14:30 -> 14:00)
-            const timeHour = time.split(':')[0];
-            const cleanTime = timeHour + ':00';
+            let time = document.getElementById('block-time').value;
+            if(!date || !time) return alert("Tarih ve saat seçin!");
+            const cleanTime = time.split(':')[0] + ':00';
             const timeKey = cleanTime.replace(':', ''); 
-            
             DB.ref(`hz_blocked/${date}/${timeKey}`).set(cleanTime);
-            
-            alert(`${date} tarihindeki ${cleanTime} saati randevulara kapatıldı!`);
             document.getElementById('block-time').value = '';
         }
 
-        function unblockTime(date, timeKey) {
-            DB.ref(`hz_blocked/${date}/${timeKey}`).remove();
-        }
+        function unblockTime(date, timeKey) { DB.ref(`hz_blocked/${date}/${timeKey}`).remove(); }
 
-        // 4. BAN
+        // BAN
         DB.ref('hz_bans/phones').on('value', snap => {
             const data = snap.val();
             const container = document.getElementById('banned-list');
-            if(!data) { container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:14px;">Banlı numara yok</div>'; return; }
+            if(!data) { container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:14px;">Banlı yok</div>'; return; }
             container.innerHTML = Object.keys(data).map(phone => `
                 <div class="ios-item">
                     <span class="item-title" style="color:var(--red); font-size:14px;"><i class="fa-solid fa-phone-slash" style="margin-right:8px;"></i>${phone}</span>
-                    <button class="ios-btn" style="background:var(--green); width:auto; padding:6px 10px; font-size:13px;" onclick="DB.ref('hz_bans/phones/${phone}').remove()"><i class="fa-solid fa-unlock"></i> Kaldır</button>
-                </div>
-            `).join('');
+                    <button class="ios-btn" style="background:var(--green); width:auto; padding:6px 10px;" onclick="DB.ref('hz_bans/phones/${phone}').remove()"><i class="fa-solid fa-unlock"></i></button>
+                </div>`).join('');
         });
 
         function banPhone() {
