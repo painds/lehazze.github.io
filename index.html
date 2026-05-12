@@ -115,6 +115,21 @@
     </div>
 
     <div id="schedule" class="page">
+        <div class="section-title">Mesai Saatleri (Genel)</div>
+        <div style="padding: 0 10px; margin-bottom: 20px;">
+            <div class="input-wrap" style="gap: 15px; margin-bottom: 5px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; color: var(--text-muted); margin-left: 5px; display:block; margin-bottom:4px;">Açılış Saati</label>
+                    <input type="time" id="work-start" class="ios-input" value="12:00">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; color: var(--text-muted); margin-left: 5px; display:block; margin-bottom:4px;">Kapanış Saati</label>
+                    <input type="time" id="work-end" class="ios-input" value="20:00">
+                </div>
+            </div>
+            <button class="ios-btn" style="background: var(--primary); width: calc(100% - 20px); margin: 0 auto; display: block;" onclick="updateWorkHours()"><i class="fa-solid fa-floppy-disk"></i> Saatleri Kaydet</button>
+        </div>
+
         <div class="section-title">Haftalık Çalışma Durumu</div>
         <div class="ios-group" id="days-list"></div>
 
@@ -123,18 +138,7 @@
             <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px; margin-left: 5px;">Seçtiğiniz tarihteki belirli bir saati randevuya kapatın.</p>
             <div class="input-wrap">
                 <input type="date" id="block-date" class="ios-input" style="flex: 1;">
-                <select id="block-time" class="ios-input" style="flex: 1;">
-                    <option value="">Saat</option>
-                    <option value="12:00">12:00</option>
-                    <option value="13:00">13:00</option>
-                    <option value="14:00">14:00</option>
-                    <option value="15:00">15:00</option>
-                    <option value="16:00">16:00</option>
-                    <option value="17:00">17:00</option>
-                    <option value="18:00">18:00</option>
-                    <option value="19:00">19:00</option>
-                    <option value="20:00">20:00</option>
-                </select>
+                <input type="time" id="block-time" class="ios-input" style="flex: 1;" step="3600">
             </div>
             <button class="ios-btn" style="background: var(--red); width: calc(100% - 20px); margin: 0 auto; display: block;" onclick="blockTime()"><i class="fa-solid fa-ban"></i> Saati Kapat</button>
         </div>
@@ -205,9 +209,10 @@
             window.scrollTo(0,0);
         }
 
-        // 🔥 TAKVİM OLUŞTURMA İŞLEMLERİ 🔥
+        // 🔥 TAKVİM VE MESAİ SAATLERİ YÖNETİMİ 🔥
         let globalAppts = {}; 
         let dateWindow = []; 
+        let globalHours = { start: 12, end: 20 }; // Varsayılan mesai saatleri
         
         function generateCalendarStructure() {
             dateWindow = [];
@@ -234,7 +239,8 @@
             });
             html += '</tr></thead><tbody>';
 
-            for(let h = 12; h <= 20; h++) {
+            // Takvim mesai saatlerine (globalHours) göre çizilir
+            for(let h = globalHours.start; h <= globalHours.end; h++) {
                 const timeStr = String(h).padStart(2,'0') + ':00';
                 html += `<tr><td class="time-label">${timeStr}</td>`;
                 
@@ -247,14 +253,12 @@
             document.getElementById('calendar-container').innerHTML = html;
         }
 
-        DB.ref('hz_appts').on('value', snap => {
+        function renderCalendarAndAppts() {
             generateCalendarStructure(); 
-            const data = snap.val();
-            if(!data) return;
-            globalAppts = data;
-
-            Object.values(data).forEach(a => {
-                // 🔥 İPTAL EDİLENLERİ TAKVİMDE HİÇ ÇİZME, ATLA 🔥
+            
+            if(!globalAppts) return;
+            Object.values(globalAppts).forEach(a => {
+                // İptal edilenleri gösterme
                 if(a.status === 'iptal' || a.status === 'cancelled') return;
 
                 const cellId = `cell-${a.date}-${a.time}`;
@@ -272,6 +276,33 @@
                     `;
                 }
             });
+        }
+
+        // Mesai Saatlerini Çek ve Ekrana Yansıt
+        DB.ref('hz_hours').on('value', snap => {
+            const data = snap.val() || { start: "12:00", end: "20:00" };
+            document.getElementById('work-start').value = data.start;
+            document.getElementById('work-end').value = data.end;
+            
+            globalHours.start = parseInt(data.start.split(':')[0]);
+            globalHours.end = parseInt(data.end.split(':')[0]);
+            
+            renderCalendarAndAppts(); // Saatler değiştiğinde takvimi yeniden çiz
+        });
+
+        function updateWorkHours() {
+            const start = document.getElementById('work-start').value;
+            const end = document.getElementById('work-end').value;
+            if(!start || !end) return alert("Lütfen hem açılış hem kapanış saatini seçin.");
+            
+            DB.ref('hz_hours').set({ start: start, end: end });
+            alert("Mesai saatleri başarıyla güncellendi! Sitedeki randevu saatleri anında değişti.");
+        }
+
+        // Randevuları Çek
+        DB.ref('hz_appts').on('value', snap => {
+            globalAppts = snap.val() || {};
+            renderCalendarAndAppts();
         });
 
         // 🔥 MODAL KONTROLLERİ 🔥
@@ -309,7 +340,6 @@
         function updateStatus(id, stat) {
             if(confirm('Onaylıyor musunuz?')) {
                 if(stat === 'iptal') {
-                    // 🔥 İPTAL BUTONUNA BASILINCA VERİTABANINDAN TAMAMEN SİLER 🔥
                     DB.ref('hz_appts/' + id).remove();
                 } else {
                     DB.ref('hz_appts/' + id).update({ status: stat });
@@ -389,14 +419,18 @@
 
         function blockTime() {
             const date = document.getElementById('block-date').value;
-            const time = document.getElementById('block-time').value;
+            let time = document.getElementById('block-time').value; // Artık dropdown değil, serbest giriş
             
             if(!date || !time) return alert("Lütfen kapatılacak tarihi ve saati seçin!");
             
-            const timeKey = time.replace(':', ''); 
-            DB.ref(`hz_blocked/${date}/${timeKey}`).set(time);
+            // Eğer dakika varsa onu sıfırla (Sadece tam saat kapanır, örn: 14:30 -> 14:00)
+            const timeHour = time.split(':')[0];
+            const cleanTime = timeHour + ':00';
+            const timeKey = cleanTime.replace(':', ''); 
             
-            alert(`${date} tarihindeki ${time} saati randevulara kapatıldı!`);
+            DB.ref(`hz_blocked/${date}/${timeKey}`).set(cleanTime);
+            
+            alert(`${date} tarihindeki ${cleanTime} saati randevulara kapatıldı!`);
             document.getElementById('block-time').value = '';
         }
 
